@@ -77,6 +77,11 @@ Default: cn`,
 				Description: "Attribute used for users (default: cn)",
 			},
 
+			"userfilter": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "LDAP filter used for users",
+			},
+
 			"certificate": &framework.FieldSchema{
 				Type:        framework.TypeString,
 				Description: "CA certificate to use when verifying LDAP server certificate, must be x509 PEM encoded (optional)",
@@ -197,6 +202,10 @@ func (b *backend) newConfigEntry(d *framework.FieldData) (*ConfigEntry, error) {
 	if userattr != "" {
 		cfg.UserAttr = strings.ToLower(userattr)
 	}
+	userfilter := d.Get("userfilter").(string)
+	if userfilter != "" {
+		cfg.UserFilter = userfilter
+	}
 	userdn := d.Get("userdn").(string)
 	if userdn != "" {
 		cfg.UserDN = userdn
@@ -308,6 +317,7 @@ type ConfigEntry struct {
 	GroupAttr     string `json:"groupattr" structs:"groupattr" mapstructure:"groupattr"`
 	UPNDomain     string `json:"upndomain" structs:"upndomain" mapstructure:"upndomain"`
 	UserAttr      string `json:"userattr" structs:"userattr" mapstructure:"userattr"`
+	UserFilter    string `json:"userfilter", structs:"userfilter" mapstructure:"userfilter"`
 	Certificate   string `json:"certificate" structs:"certificate" mapstructure:"certificate"`
 	InsecureTLS   bool   `json:"insecure_tls" structs:"insecure_tls" mapstructure:"insecure_tls"`
 	StartTLS      bool   `json:"starttls" structs:"starttls" mapstructure:"starttls"`

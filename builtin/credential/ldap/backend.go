@@ -236,7 +236,23 @@ func (b *backend) getUserBindDN(cfg *ConfigEntry, c *ldap.Conn, username string)
 			return bindDN, fmt.Errorf("LDAP bind (service) failed: %v", err)
 		}
 
-		filter := fmt.Sprintf("(%s=%s)", cfg.UserAttr, ldap.EscapeFilter(username))
+		filter := ""
+		if cfg.UserFilter != "" {
+			t, err := template.New("queryTemplate").Parse(cfg.UserFilter)
+			if err != nil {
+				return bindDN, fmt.Errorf("LDAP search failed due to template compilation error: %v", err)
+			}
+			context := struct {
+				Username string
+			}{
+				ldap.EscapeFilter(username),
+			}
+			var renderedQuery bytes.Buffer
+			t.Execute(&renderedQuery, context)
+			filter := renderedQuery.String()
+		} else {
+			filter := fmt.Sprintf("(%s=%s)", cfg.UserAttr, ldap.EscapeFilter(username))
+		}
 		if b.Logger().IsDebug() {
 			b.Logger().Debug("auth/ldap: Discovering user", "userdn", cfg.UserDN, "filter", filter)
 		}
